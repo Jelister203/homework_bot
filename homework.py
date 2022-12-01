@@ -1,12 +1,24 @@
-import os, time, requests, logging, json, telegram
-from logging.handlers import RotatingFileHandler
+import os, time, requests, logging, telegram
 from dotenv import load_dotenv
 load_dotenv()
 
 
+class TokenException():
+    pass
+
+class SendingMessageException():
+    pass
+
+class GetApiException():
+    pass
+
+class StatusParcingException():
+    pass
+
+
 logging.basicConfig(
     level=logging.INFO,
-    filename='program.log', 
+    filename='program.log',
     format='%(asctime)s, %(levelname)s, %(message)s, %(lineno)s'
 )
 
@@ -28,6 +40,7 @@ HOMEWORK_VERDICTS = {
 
 def check_tokens():
     """Raises an exception if even one token is empty"""
+
     tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
     for token in tokens:
         if not token:
@@ -37,6 +50,7 @@ def check_tokens():
 
 def send_message(bot, message):
     """Sends message to the user"""
+
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.debug("Message sended successfully")
@@ -82,7 +96,7 @@ def parse_status(homework):
         homework_name = homework.get("homework_name")
         verdict_status = homework.get("status")
         if homework.get("homework_name") == None:
-            raise ParsingStatusException()
+            raise StatusParcingException()
         if homework.get("status") == None:
             raise StatusParcingException()
         if (homework.get("status") != "approved" and
@@ -90,7 +104,7 @@ def parse_status(homework):
             homework.get("status") != "rejected"):
             raise StatusParcingException()
     except Exception:
-        raise ParsingStatusException()
+        raise StatusParcingException()
     verdict = HOMEWORK_VERDICTS.get(verdict_status)
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
