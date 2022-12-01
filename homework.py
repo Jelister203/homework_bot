@@ -113,8 +113,8 @@ def parse_status(homework):
         if homework.get("status") is None:
             raise StatusParcingException()
         if (homework.get("status") != "approved"
-        and homework.get("status") != "reviewing"
-        and homework.get("status") != "rejected"):
+                and homework.get("status") != "reviewing"
+                and homework.get("status") != "rejected"):
             raise StatusParcingException()
     except Exception:
         raise StatusParcingException()
