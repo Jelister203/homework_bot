@@ -1,0 +1,1 @@
+2022-11-29 21:54:31,727, CRITICAL, Путь - /home/jelister/Desktop/Dev/homework_bot/homework.py, Файл - homework.py, Функция - main, Номер строки - 109, Отсутствует необходимое кол-во переменных окружения
