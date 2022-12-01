@@ -8,30 +8,26 @@ load_dotenv()
 
 
 class TokenException():
-    """
-    Yet Another Custom Exception
-    """
+    """Yet Another Custom Exception."""
+
     pass
 
 
 class SendingMessageException():
-    """
-    Yet Another Custom Exception
-    """
+    """Yet Another Custom Exception."""
+
     pass
 
 
 class GetApiException():
-    """
-    Yet Another Custom Exception
-    """
+    """Yet Another Custom Exception."""
+
     pass
 
 
 class StatusParcingException():
-    """
-    Yet Another Custom Exception
-    """
+    """Yet Another Custom Exception."""
+
     pass
 
 
@@ -58,9 +54,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """
-    Raises an exception if even one token is empty
-    """
+    """Raises an exception if even one token is empty"""
     tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
     for token in tokens:
         if not token:
@@ -69,9 +63,7 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """
-    Sends message to the user
-    """
+    """Sends message to the user."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.debug("Message sended successfully")
@@ -81,9 +73,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """
-    Return's Practicum API's answer as a Python dict
-    """
+    """Return's Practicum API's answer as a Python dict."""
     try:
         url = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
@@ -98,9 +88,7 @@ def get_api_answer(timestamp):
 
 
 def check_response(response):
-    """
-    Raises an Exception if response isn't correct
-    """
+    """Raises an Exception if response isn't correct."""
     try:
         if type(response) != dict:
             raise TypeError
@@ -116,9 +104,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """
-    Parses thestatus and other info of the homework
-    """
+    """Parses thestatus and other info of the homework."""
     try:
         homework_name = homework.get("homework_name")
         verdict_status = homework.get("status")
