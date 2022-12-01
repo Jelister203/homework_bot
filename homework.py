@@ -54,7 +54,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """Raises an exception if even one token is empty"""
+    """Raises an exception if even one token is empty."""
     tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
     for token in tokens:
         if not token:
@@ -69,7 +69,7 @@ def send_message(bot, message):
         logging.debug("Message sended successfully")
     except Exception as error:
         logging.error("Troubles with sending a message")
-        raise SendingMessageException("Troubles with sending a message, error: "+error)
+        raise SendingMessageException(error)
 
 
 def get_api_answer(timestamp):
@@ -84,7 +84,7 @@ def get_api_answer(timestamp):
         else:
             raise GetApiException("Troubles with getting to the Practicum API")
     except Exception as error:
-        raise GetApiException("Troubles with getting to the Practicum API")
+        raise GetApiException(error)
 
 
 def check_response(response):
@@ -108,13 +108,13 @@ def parse_status(homework):
     try:
         homework_name = homework.get("homework_name")
         verdict_status = homework.get("status")
-        if homework.get("homework_name") == None:
+        if homework.get("homework_name") is None:
             raise StatusParcingException()
-        if homework.get("status") == None:
+        if homework.get("status") is None:
             raise StatusParcingException()
-        if (homework.get("status") != "approved" and
-            homework.get("status") != "reviewing" and
-            homework.get("status") != "rejected"):
+        if (homework.get("status") != "approved"
+        and homework.get("status") != "reviewing"
+        and homework.get("status") != "rejected"):
             raise StatusParcingException()
     except Exception:
         raise StatusParcingException()
@@ -124,9 +124,7 @@ def parse_status(homework):
 
 
 def main():
-    """
-    Основная логика работы бота
-    """
+    """Основная логика работы бота."""
     check_tokens()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
