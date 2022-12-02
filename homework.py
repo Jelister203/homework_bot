@@ -3,39 +3,41 @@ import time
 import requests
 import logging
 import telegram
+from http import HTTPStatus
 from dotenv import load_dotenv
 load_dotenv()
 
 
-class TokenException():
+class CustomException(Exception):
+    """Yet Another Custom Exception."""
+
+    def __init__(self, error: str):
+        self.error = error
+
+
+class TokenException(CustomException):
     """Yet Another Custom Exception."""
 
     pass
 
 
-class SendingMessageException():
+class SendingMessageException(CustomException):
     """Yet Another Custom Exception."""
 
     pass
 
 
-class GetApiException():
+class GetApiException(CustomException):
     """Yet Another Custom Exception."""
 
     pass
 
 
-class StatusParcingException():
+class StatusParcingException(CustomException):
     """Yet Another Custom Exception."""
 
     pass
 
-
-logging.basicConfig(
-    level=logging.INFO,
-    filename='program.log',
-    format='%(asctime)s, %(levelname)s, %(message)s, %(lineno)s'
-)
 
 PRACTICUM_TOKEN = os.getenv("PRACTICUM_TOKEN")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -59,7 +61,7 @@ def check_tokens():
     for token in tokens:
         if not token:
             logging.critical("Some tokens are empty")
-            raise TokenException("Some tokens are empty")
+            raise CustomException.TokenException("Some tokens are empty")
 
 
 def send_message(bot, message):
@@ -67,9 +69,9 @@ def send_message(bot, message):
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.debug("Message sended successfully")
-    except Exception as error:
+    except telegram.TelegramError as error:
         logging.error("Troubles with sending a message")
-        raise SendingMessageException(error)
+        raise CustomException.SendingMessageException(error)
 
 
 def get_api_answer(timestamp):
@@ -79,45 +81,43 @@ def get_api_answer(timestamp):
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
         payload = {'from_date': f"{timestamp}"}
         homework_statuses = requests.get(url, headers=headers, params=payload)
-        if homework_statuses.status_code == 200:
-            return homework_statuses.json()
-        else:
-            raise GetApiException("Troubles with getting to the Practicum API")
-    except Exception as error:
-        raise GetApiException(error)
+        match homework_statuses:
+            case homework_statuses if homework_statuses.status_code == HTTPStatus.OK:
+                return homework_statuses.json()
+            case homework_statuses:
+                raise CustomException.GetApiException("Troubles with getting to the Practicum API")
+    except requests.RequestException as error:
+        raise CustomException.GetApiException(error)
 
 
 def check_response(response):
     """Raises an Exception if response isn't correct."""
     try:
-        if type(response) != dict:
-            raise TypeError
-            if len(response.get("homeworks")) != 0:
-                if type(response.get("homeworks")[0]) != dict:
-                    raise TypeError
-        if type(response.get("homeworks")) != list:
-            raise TypeError
-        if type(response.get("current_date")) != int:
-            raise TypeError
-    except TypeError:
-        raise TypeError
+        match response:
+            case response if not isinstance(response, dict):
+                raise TypeError
+            case response if not isinstance(response.get("current_date"), int):
+                raise TypeError
+            case response if not isinstance(response.get("homeworks"), list):
+                raise TypeError
+            case response if not isinstance(response.get("homeworks")[0], dict):
+                raise TypeError
+    except TypeError as error:
+        raise TypeError(error)
 
 
 def parse_status(homework):
     """Parses thestatus and other info of the homework."""
-    try:
-        homework_name = homework.get("homework_name")
-        verdict_status = homework.get("status")
-        if homework.get("homework_name") is None:
-            raise StatusParcingException()
-        if homework.get("status") is None:
-            raise StatusParcingException()
-        if (homework.get("status") != "approved"
-                and homework.get("status") != "reviewing"
-                and homework.get("status") != "rejected"):
-            raise StatusParcingException()
-    except Exception:
-        raise StatusParcingException()
+    homework_name = homework.get("homework_name")
+    verdict_status = homework.get("status")
+    if homework.get("homework_name") is None:
+        raise CustomException.StatusParcingException()
+    if homework.get("status") is None:
+        raise CustomException.StatusParcingException()
+    if (homework.get("status") != "approved"
+            and homework.get("status") != "reviewing"
+            and homework.get("status") != "rejected"):
+        raise CustomException.StatusParcingException()
     verdict = HOMEWORK_VERDICTS.get(verdict_status)
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -138,13 +138,20 @@ def main():
                 message = parse_status(homework)
             if message:
                 send_message(bot, message)
-            timestamp = int(response.get("current_date"))
+            timestamp = int(response.get("current_date", timestamp))
+            logging.debug("No homework updates")
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             send_message(bot, message)
-        time.sleep(RETRY_PERIOD)
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.INFO,
+        filename='program.log',
+        format='%(asctime)s, %(levelname)s, %(message)s, %(lineno)s'
+    )
     main()
