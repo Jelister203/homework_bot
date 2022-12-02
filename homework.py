@@ -82,10 +82,11 @@ def get_api_answer(timestamp):
         payload = {'from_date': f"{timestamp}"}
         homework_statuses = requests.get(url, headers=headers, params=payload)
         match homework_statuses:
-            case homework_statuses if homework_statuses.status_code == HTTPStatus.OK:
+            case homework_statuses as hs if hs.status_code == HTTPStatus.OK:
                 return homework_statuses.json()
             case homework_statuses:
-                raise CustomException.GetApiException("Troubles with getting to the Practicum API")
+                error = "Troubles with getting to the Practicum API"
+                raise CustomException.GetApiException(error)
     except requests.RequestException as error:
         raise CustomException.GetApiException(error)
 
@@ -94,13 +95,13 @@ def check_response(response):
     """Raises an Exception if response isn't correct."""
     try:
         match response:
-            case response if not isinstance(response, dict):
+            case response as r if not isinstance(r, dict):
                 raise TypeError
-            case response if not isinstance(response.get("current_date"), int):
+            case response as r if not isinstance(r.get("current_date"), int):
                 raise TypeError
-            case response if not isinstance(response.get("homeworks"), list):
+            case response as r if not isinstance(r.get("homeworks"), list):
                 raise TypeError
-            case response if not isinstance(response.get("homeworks")[0], dict):
+            case response as r if not isinstance(r.get("homeworks")[0], dict):
                 raise TypeError
     except TypeError as error:
         raise TypeError(error)
