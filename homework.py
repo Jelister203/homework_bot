@@ -3,41 +3,11 @@ import time
 import requests
 import logging
 import telegram
+import exceptions
 from http import HTTPStatus
 from dotenv import load_dotenv
+
 load_dotenv()
-
-
-class CustomException(Exception):
-    """Yet Another Custom Exception."""
-
-    def __init__(self, error: str):
-        """Once And For All."""
-        self.error = error
-
-
-class TokenException(CustomException):
-    """Yet Another Custom Exception."""
-
-    pass
-
-
-class SendingMessageException(CustomException):
-    """Yet Another Custom Exception."""
-
-    pass
-
-
-class GetApiException(CustomException):
-    """Yet Another Custom Exception."""
-
-    pass
-
-
-class StatusParcingException(CustomException):
-    """Yet Another Custom Exception."""
-
-    pass
 
 
 PRACTICUM_TOKEN = os.getenv("PRACTICUM_TOKEN")
@@ -48,9 +18,10 @@ RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
+URL = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 
 HOMEWORK_VERDICTS = {
-    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
+    'approved':'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
@@ -62,7 +33,7 @@ def check_tokens():
     for token in tokens:
         if not token:
             logging.critical("Some tokens are empty")
-            raise CustomException.TokenException("Some tokens are empty")
+            raise TokenException("Some tokens are empty")
 
 
 def send_message(bot, message):
@@ -72,16 +43,15 @@ def send_message(bot, message):
         logging.debug("Message sended successfully")
     except telegram.TelegramError as error:
         logging.error("Troubles with sending a message")
-        raise CustomException.SendingMessageException(error)
+        raise SendingMessageException(error)
 
 
 def get_api_answer(timestamp):
     """Return's Practicum API's answer as a Python dict."""
     try:
-        url = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
         payload = {'from_date': f"{timestamp}"}
-        homework_statuses = requests.get(url, headers=headers, params=payload)
+        homework_statuses = requests.get(URL, headers=headers, params=payload)
         """
         match homework_statuses.status_code:  # Raises flake8 E999 error.
             case HTTPStatus.OK:
@@ -93,36 +63,40 @@ def get_api_answer(timestamp):
         if homework_statuses.status_code == HTTPStatus.OK:
             return homework_statuses.json()
         error = "Troubles with getting to the Practicum API"
-        raise CustomException.GetApiException(error)
+        raise GetApiException(error)
 
     except requests.RequestException as error:
-        raise CustomException.GetApiException(error)
+        raise GetApiException(error)
 
 
 def check_response(response):
     """Raises an Exception if response isn't correct."""
-    try:
-        """
-        match response:  # Raises flake8 error too.
-            case response as r if not isinstance(r, dict):
-                raise TypeError
-            case response as r if not isinstance(r.get("current_date"), int):
-                raise TypeError
-            case response as r if not isinstance(r.get("homeworks"), list):
-                raise TypeError
-            case response as r if not isinstance(r.get("homeworks")[0], dict):
-                raise TypeError
-        """
-        if not isinstance(response, dict):
+    """
+    match response:  # Raises flake8 error too.
+        case response as r if not isinstance(r, dict):
             raise TypeError
-        if not isinstance(response.get("current_date"), int):
+        case response as r if not isinstance(r.get("current_date"), int):
             raise TypeError
-        if not isinstance(response.get("homeworks"), list):
+        case response as r if not isinstance(r.get("homeworks"), list):
             raise TypeError
-        if not isinstance(response.get("homeworks")[0], dict):
+        case response as r if not isinstance(r.get("homeworks")[0], dict):
             raise TypeError
-    except TypeError as error:
-        raise TypeError(error)
+    """
+    if not isinstance(response, dict):
+        raise TypeError("Invalid response type.",
+                        "Expected dict, got " + type(response))
+    if not isinstance(response.get("current_date"), int):
+        raise TypeError("Invalid current_date type.",
+                        "Expected int, got " +
+                        type(response.get("current_date")))
+    if not isinstance(response.get("homeworks"), list):
+        raise TypeError("Invalid homeworks type.",
+                        "Expected list, got " +
+                        type(response.get("homeworks")))
+    if not isinstance(response.get("homeworks")[0], dict):
+        raise TypeError("Invalid current_date type.",
+                        "Expected dict, got " +
+                        type(response.get("homeworks")[0]))
 
 
 def parse_status(homework):
@@ -130,13 +104,13 @@ def parse_status(homework):
     homework_name = homework.get("homework_name")
     verdict_status = homework.get("status")
     if homework.get("homework_name") is None:
-        raise CustomException.StatusParcingException()
+        raise CustomException.StatusParsingException()
     if homework.get("status") is None:
-        raise CustomException.StatusParcingException()
+        raise CustomException.StatusParsingException()
     if (homework.get("status") != "approved"
             and homework.get("status") != "reviewing"
             and homework.get("status") != "rejected"):
-        raise CustomException.StatusParcingException()
+        raise CustomException.StatusParsingException()
     verdict = HOMEWORK_VERDICTS.get(verdict_status)
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -157,7 +131,7 @@ def main():
                 message = parse_status(homework)
             if message:
                 send_message(bot, message)
-            timestamp = int(response.get("current_date", timestamp))
+            timestamp = response.get("current_date", timestamp)
             logging.debug("No homework updates")
 
         except Exception as error:
