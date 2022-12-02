@@ -82,8 +82,8 @@ def get_api_answer(timestamp):
         payload = {'from_date': f"{timestamp}"}
         OK = HTTPStatus.OK.value
         homework_statuses = requests.get(url, headers=headers, params=payload)
-        match homework_statuses.status_code.value:
-            case HTTPStatus.OK:
+        match int(homework_statuses.status_code.value):
+            case int(HTTPStatus.OK.value):
                 return homework_statuses.json()
             case _:
                 error = "Troubles with getting to the Practicum API"
