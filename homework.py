@@ -81,8 +81,7 @@ def get_api_answer(timestamp):
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
         payload = {'from_date': f"{timestamp}"}
         homework_statuses = requests.get(url, headers=headers, params=payload)
-        status = homework_statuses.status_code
-        match status:
+        match homework_statuses.status_code:  # flake8: noqa
             case HTTPStatus.OK:
                 return homework_statuses.json()
             case _:
