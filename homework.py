@@ -87,16 +87,16 @@ def check_response(response):
                         "Expected dict, got " + type(response))
     if not isinstance(response.get("current_date"), int):
         raise TypeError("Invalid current_date type.",
-                        "Expected int, got " +
-                        type(response.get("current_date")))
+                        "Expected int, got "
+                        + type(response.get("current_date")))
     if not isinstance(response.get("homeworks"), list):
         raise TypeError("Invalid homeworks type.",
-                        "Expected list, got " +
-                        type(response.get("homeworks")))
+                        "Expected list, got "
+                        + type(response.get("homeworks")))
     if not isinstance(response.get("homeworks")[0], dict):
         raise TypeError("Invalid current_date type.",
-                        "Expected dict, got " +
-                        type(response.get("homeworks")[0]))
+                        "Expected dict, got "
+                        + type(response.get("homeworks")[0]))
 
 
 def parse_status(homework):
