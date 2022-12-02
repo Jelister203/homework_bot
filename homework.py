@@ -80,10 +80,11 @@ def get_api_answer(timestamp):
         url = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
         payload = {'from_date': f"{timestamp}"}
-        statuses = requests.get(url, headers=headers, params=payload)
-        match statuses.status_code:
+        homework_statuses = requests.get(url, headers=headers, params=payload)
+        status = homework_statuses.status_code
+        match status:
             case HTTPStatus.OK:
-                return statuses.json()
+                return homework_statuses.json()
             case _:
                 error = "Troubles with getting to the Practicum API"
                 raise CustomException.GetApiException(error)
