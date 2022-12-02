@@ -82,7 +82,7 @@ def get_api_answer(timestamp):
         payload = {'from_date': f"{timestamp}"}
         homework_statuses = requests.get(url, headers=headers, params=payload)
         """
-        match homework_statuses.status_code:  # Raises flake8 E999 error. Idk why
+        match homework_statuses.status_code:  # Raises flake8 E999 error
             case HTTPStatus.OK:
                 return homework_statuses.json()
             case _:
@@ -101,6 +101,7 @@ def get_api_answer(timestamp):
 def check_response(response):
     """Raises an Exception if response isn't correct."""
     try:
+        """
         match response:
             case response as r if not isinstance(r, dict):
                 raise TypeError
@@ -110,6 +111,15 @@ def check_response(response):
                 raise TypeError
             case response as r if not isinstance(r.get("homeworks")[0], dict):
                 raise TypeError
+        """
+        if not isinstance(response, dict):
+            raise TypeError
+        if not isinstance(response.get("current_date"), int):
+            raise TypeError
+        if not isinstance(response.get("homeworks"), list):
+            raise TypeError
+        if not isinstance(response.get("homeworks")[0], dict):
+            raise TypeError
     except TypeError as error:
         raise TypeError(error)
 
