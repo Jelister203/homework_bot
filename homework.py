@@ -12,6 +12,7 @@ class CustomException(Exception):
     """Yet Another Custom Exception."""
 
     def __init__(self, error: str):
+        """Once And For All."""
         self.error = error
 
 
@@ -82,7 +83,7 @@ def get_api_answer(timestamp):
         payload = {'from_date': f"{timestamp}"}
         homework_statuses = requests.get(url, headers=headers, params=payload)
         """
-        match homework_statuses.status_code:  # Raises flake8 E999 error
+        match homework_statuses.status_code:  # Raises flake8 E999 error.
             case HTTPStatus.OK:
                 return homework_statuses.json()
             case _:
@@ -102,7 +103,7 @@ def check_response(response):
     """Raises an Exception if response isn't correct."""
     try:
         """
-        match response:
+        match response:  # Raises flake8 error too.
             case response as r if not isinstance(r, dict):
                 raise TypeError
             case response as r if not isinstance(r.get("current_date"), int):
