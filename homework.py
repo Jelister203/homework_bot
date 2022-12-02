@@ -81,12 +81,19 @@ def get_api_answer(timestamp):
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
         payload = {'from_date': f"{timestamp}"}
         homework_statuses = requests.get(url, headers=headers, params=payload)
-        match homework_statuses.status_code:
+        """
+        match homework_statuses.status_code:  # Raises flake8 E999 error. Idk why
             case HTTPStatus.OK:
                 return homework_statuses.json()
             case _:
                 error = "Troubles with getting to the Practicum API"
                 raise CustomException.GetApiException(error)
+        """
+        if homework_statuses.status_code == HTTPStatus.OK:
+            return homework_statuses.json()
+        error = "Troubles with getting to the Practicum API"
+        raise CustomException.GetApiException(error)
+
     except requests.RequestException as error:
         raise CustomException.GetApiException(error)
 
