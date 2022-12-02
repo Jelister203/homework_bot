@@ -80,9 +80,10 @@ def get_api_answer(timestamp):
         url = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
         payload = {'from_date': f"{timestamp}"}
+        OK = HTTPStatus.OK.value
         homework_statuses = requests.get(url, headers=headers, params=payload)
-        match homework_statuses.status_code:# flake8: noqa: E999
-            case HTTPStatus.OK:
+        match homework_statuses.status_code:  # For some reason rises E999 error.
+            case 200:  # "case OK:" crashes everything. I have no idea
                 return homework_statuses.json()
             case _:
                 error = "Troubles with getting to the Practicum API"
