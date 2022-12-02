@@ -80,10 +80,10 @@ def get_api_answer(timestamp):
         url = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
         headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
         payload = {'from_date': f"{timestamp}"}
-        OK = HTTPStatus.OK.value
         homework_statuses = requests.get(url, headers=headers, params=payload)
-        match int(homework_statuses.status_code.value):
-            case int(HTTPStatus.OK.value):
+        
+        match homework_statuses:
+            case homework_statuses as hs if hs.status_code == HTTPStatus.OK:
                 return homework_statuses.json()
             case _:
                 error = "Troubles with getting to the Practicum API"
