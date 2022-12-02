@@ -84,7 +84,7 @@ def get_api_answer(timestamp):
         match homework_statuses:
             case homework_statuses as hs if hs.status_code == HTTPStatus.OK:
                 return homework_statuses.json()
-            case homework_statuses:
+            case _:
                 error = "Troubles with getting to the Practicum API"
                 raise CustomException.GetApiException(error)
     except requests.RequestException as error:
