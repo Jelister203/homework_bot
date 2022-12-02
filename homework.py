@@ -21,7 +21,7 @@ HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 URL = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 
 HOMEWORK_VERDICTS = {
-    'approved':'Работа проверена: ревьюеру всё понравилось. Ура!',
+    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
@@ -33,7 +33,7 @@ def check_tokens():
     for token in tokens:
         if not token:
             logging.critical("Some tokens are empty")
-            raise TokenException("Some tokens are empty")
+            raise exceptions.TokenException("Some tokens are empty")
 
 
 def send_message(bot, message):
@@ -43,7 +43,7 @@ def send_message(bot, message):
         logging.debug("Message sended successfully")
     except telegram.TelegramError as error:
         logging.error("Troubles with sending a message")
-        raise SendingMessageException(error)
+        raise exceptions.SendingMessageException(error)
 
 
 def get_api_answer(timestamp):
@@ -63,10 +63,10 @@ def get_api_answer(timestamp):
         if homework_statuses.status_code == HTTPStatus.OK:
             return homework_statuses.json()
         error = "Troubles with getting to the Practicum API"
-        raise GetApiException(error)
+        raise exceptions.GetApiException(error)
 
     except requests.RequestException as error:
-        raise GetApiException(error)
+        raise exceptions.GetApiException(error)
 
 
 def check_response(response):
@@ -104,13 +104,13 @@ def parse_status(homework):
     homework_name = homework.get("homework_name")
     verdict_status = homework.get("status")
     if homework.get("homework_name") is None:
-        raise CustomException.StatusParsingException()
+        raise exceptions.StatusParsingException()
     if homework.get("status") is None:
-        raise CustomException.StatusParsingException()
+        raise exceptions.StatusParsingException()
     if (homework.get("status") != "approved"
             and homework.get("status") != "reviewing"
             and homework.get("status") != "rejected"):
-        raise CustomException.StatusParsingException()
+        raise exceptions.StatusParsingException()
     verdict = HOMEWORK_VERDICTS.get(verdict_status)
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
